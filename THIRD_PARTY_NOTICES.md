@@ -35,7 +35,8 @@ SOFTWARE.
 ## Bundled runtime libraries
 
 The build includes easy-live2d 0.4.4, Pixi.js 8.18.1, fflate 0.8.2, JSON5 2.2.3
-and their bundled dependencies, unmodified. Each package's supplied license is
+and their bundled dependencies. easy-live2d receives a local lifecycle fix,
+described below; other dependencies are unmodified. Each package's supplied license is
 copied to lib/licenses; inventory.json records the exact versions and original
 source tarball URLs. easy-live2d 0.4.4's package metadata declares MPL-2.0 while
 its distributed LICENSE contains MIT text; both the metadata and license file
@@ -54,3 +55,18 @@ plugin or source archive. Import them locally under their respective terms.
 The upstream BongoCat model and Core used for local verification are excluded
 from all delivered archives. The optional whale bridge reads existing routes;
 no whale code, character artwork, audio, credentials, or accounting data is copied.
+
+## easy-live2d local lifecycle patch (0.1.1)
+
+`scripts/patch-live2d.mjs` applies a narrow, fail-closed build-time patch to
+easy-live2d 0.4.4: reference-count Cubism owners, release a disposed model's
+native memory and GL-context shader resources, and defer global framework
+disposal until the last owner exits. This prevents replacing one Live2D model
+from invalidating the newly prepared model. Original source is linked above;
+the complete transformation is available in this repository:
+https://github.com/Zimeng-Luo/dsh-pet-hub/blob/main/scripts/patch-live2d.mjs
+
+Mver layout and VK binding interpretation in src/adapters/mver.js is a new
+JavaScript implementation of the config/resource format. No Mver executable
+is invoked or redistributed by the installer. User model resources remain
+local imports and are excluded from the installer.

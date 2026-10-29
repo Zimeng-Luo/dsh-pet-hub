@@ -1,6 +1,6 @@
 {
   "name": "dsh-pet-hub",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH sidebar pet host with BongoCat-compatible runtime",
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "cordis.patch.yml",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/芙宁娜模型配置.md"
   ],
   "engines": {
     "dsh": "0.2.1-rc.3"

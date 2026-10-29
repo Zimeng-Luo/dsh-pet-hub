@@ -3,47 +3,72 @@
 import { Application, Ticker } from 'pixi.js';
 import { Config, CubismSetting, Live2DSprite, Priority } from 'easy-live2d';
 import { keyCandidates } from './keys.js';
+import { installMverInput } from './mver.js';
 
-export async function mountBongo({ pack, entry, element, modelJSON, urls, resolveReference }) {
+export async function mountBongo({ pack, entry, element, modelJSON, urls, resolveReference, profile = null }) {
   Config.MouseFollow = false;
   Config.MotionSound = false; // Enabled only through an explicit user control.
   const app = new Application(), ticker = new Ticker();
-  ticker.maxFPS = 30;
+  ticker.maxFPS = profile?.fps || 30;
   let sprite, timer, observer, disposed = false;
   const listeners = [], overlays = new Map(), held = new Map();
   const root = entry.path.split('/').slice(0, -1).join('/');
   const resource = suffix => `${root ? `${root}/` : ''}resources/${suffix}`;
   const files = new Map(pack.files.map(f => [f.path, f]));
+  const extraURLs = [];
+  const renderElement = profile ? document.createElement('div') : element;
+  if (profile) { renderElement.className = 'dph-mver-viewport'; element.append(renderElement); }
+  const viewport = () => {
+    const width = Math.max(1, element.clientWidth), height = Math.max(1, element.clientHeight);
+    if (!profile) return { width, height };
+    const scale = Math.min(width / profile.width, height / profile.height);
+    const w = profile.width * scale, h = profile.height * scale;
+    Object.assign(renderElement.style, { width: `${w}px`, height: `${h}px`, left: `${(width - w) / 2}px`, top: `${(height - h) / 2}px` });
+    return { width: w, height: h };
+  };
   const listen = (target, name, fn) => { target.addEventListener(name, fn); listeners.push(() => target.removeEventListener(name, fn)); };
   const dispose = () => {
     if (disposed) return; disposed = true;
     clearTimeout(timer); observer?.disconnect(); listeners.forEach(off => off());
-    ticker.stop();
+    ticker.stop(); app.stop();
     try { sprite?.destroy(); } finally {
       ticker.destroy();
       if (app.renderer) app.destroy(true, { children: true, texture: false, textureSource: false });
-      element.replaceChildren(); urls.dispose();
+      element.replaceChildren(); urls.dispose(); extraURLs.forEach(url => URL.revokeObjectURL(url));
     }
   };
   try {
-    await app.init({ backgroundAlpha: 0, autoDensity: true, resolution: Math.min(devicePixelRatio || 1, 2), preference: 'webgl', sharedTicker: false, width: Math.max(1, element.clientWidth), height: Math.max(1, element.clientHeight) });
-    app.ticker.maxFPS = 30;
-    if (files.has(resource('background.png'))) {
-      const bg = document.createElement('img'); bg.src = urls.get(resource('background.png')); bg.className = 'dph-layer'; bg.alt = ''; element.append(bg);
+    const initial = viewport();
+    await app.init({ backgroundAlpha: 0, autoDensity: true, resolution: Math.min(devicePixelRatio || 1, 2), preference: 'webgl', sharedTicker: false, width: initial.width, height: initial.height });
+    app.ticker.maxFPS = profile?.fps || 30;
+    const background = profile?.background || (files.has(resource('background.png')) ? resource('background.png') : null);
+    if (background) {
+      const bg = document.createElement('img'); bg.src = urls.get(background); bg.className = 'dph-layer'; bg.alt = ''; renderElement.append(bg);
     }
-    element.append(app.canvas);
+    renderElement.append(app.canvas);
+    let neutralIndex = -1, neutralFile, neutralURL;
+    if (profile) {
+      modelJSON = structuredClone(modelJSON);
+      const expressions = modelJSON.FileReferences.Expressions ||= [];
+      neutralIndex = expressions.length;
+      neutralFile = `__dph_neutral_${crypto.randomUUID()}.exp3.json`;
+      expressions.push({ Name: '__dph_neutral__', File: neutralFile });
+      neutralURL = URL.createObjectURL(new Blob([JSON.stringify({ Type: 'Live2D Expression', FadeInTime: 0.15, FadeOutTime: 0.15, Parameters: [] })], { type: 'application/json' }));
+      extraURLs.push(neutralURL);
+    }
     const setting = new CubismSetting({ modelJSON });
-    setting.redirectPath(({ file }) => urls.get(resolveReference(entry.path, file)));
+    setting.redirectPath(({ file }) => file === neutralFile ? neutralURL : urls.get(resolveReference(entry.path, file)));
     sprite = new Live2DSprite({ modelSetting: setting, ticker });
     app.stage.addChild(sprite);
     await Promise.race([sprite.ready, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('模型加载超时：请检查 moc3 版本、纹理和 Cubism Core 版本')), 30000); })]);
     clearTimeout(timer);
     const natural = { width: sprite.width, height: sprite.height };
     const resize = () => {
-      const w = Math.max(1, element.clientWidth), h = Math.max(1, element.clientHeight);
+      const { width: w, height: h } = viewport();
       app.renderer.resize(w, h);
       const scale = Math.min(w / natural.width, h / natural.height);
-      sprite.scale.set(scale); sprite.anchor.set(0.5); sprite.position.set(w / 2, h / 2);
+      sprite.scale.set(scale * (profile?.flip ? -1 : 1), scale); sprite.anchor.set(0.5);
+      sprite.position.set(w / 2 + (profile?.offset[0] || 0) * w / 2, h / 2 - (profile?.offset[1] || 0) * h / 2);
     };
     observer = new ResizeObserver(resize); observer.observe(element); resize();
     const param = (id, value) => {
@@ -60,6 +85,8 @@ export async function mountBongo({ pack, entry, element, modelJSON, urls, resolv
     const keyInfo = code => {
       return keyCandidates(code).map(c => keys.get(c)).find(Boolean);
     };
+    const expressions = sprite.getExpressions().filter(e => e.name !== '__dph_neutral__');
+    const mverInput = profile ? installMverInput({ sprite, element: renderElement, profile, urls, listen, param, expressions, neutralIndex }) : null;
     const refreshHands = () => {
       for (const side of ['left', 'right']) {
         const latest = [...held.values()].filter(k => k.side === side).at(-1);
@@ -71,10 +98,12 @@ export async function mountBongo({ pack, entry, element, modelJSON, urls, resolv
         } else if (overlay) overlay.hidden = true;
       }
     };
-    const reset = () => { held.clear(); refreshHands(); param('ParamMouseLeftDown', 0); param('ParamMouseRightDown', 0); };
-    listen(window, 'keydown', e => { if (!e.repeat) { const key = keyInfo(e.code); if (key) { held.set(e.code, key); refreshHands(); } } });
-    listen(window, 'keyup', e => { held.delete(e.code); refreshHands(); });
-    listen(window, 'blur', reset);
+    const reset = () => { if (mverInput) return mverInput.reset(); held.clear(); refreshHands(); param('ParamMouseLeftDown', 0); param('ParamMouseRightDown', 0); };
+    if (!profile) {
+      listen(window, 'keydown', e => { if (!e.repeat) { const key = keyInfo(e.code); if (key) { held.set(e.code, key); refreshHands(); } } });
+      listen(window, 'keyup', e => { held.delete(e.code); refreshHands(); });
+      listen(window, 'blur', reset);
+    }
     let destination = { x: 0.5, y: 0.5 }, position = { ...destination };
     listen(window, 'pointermove', e => { destination = { x: e.clientX / Math.max(innerWidth, 1), y: e.clientY / Math.max(innerHeight, 1) }; });
     const mouse = (e, down) => { if (e.button === 0 || e.button === 2) param(e.button === 0 ? 'ParamMouseLeftDown' : 'ParamMouseRightDown', down); };
@@ -90,9 +119,10 @@ export async function mountBongo({ pack, entry, element, modelJSON, urls, resolv
     });
     ticker.start();
     return {
-      motions: sprite.getMotions(), expressions: sprite.getExpressions(),
+      motions: sprite.getMotions(), expressions,
       motion: motion => sprite.startMotion({ ...motion, priority: Priority.Normal }),
-      expression: index => sprite.setExpression({ index }),
+      expression: mverInput?.expression || (index => sprite.setExpression({ index })),
+      ...(mverInput ? { resetExpression: mverInput.resetExpression } : {}),
       visible(value) { if (value) { ticker.start(); app.start(); } else { reset(); ticker.stop(); app.stop(); } },
       event(event) { if (event.motion) return sprite.startMotion({ ...event.motion, priority: Priority.Normal }); },
       dispose,

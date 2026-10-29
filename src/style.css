@@ -5,6 +5,8 @@ div:has(> .dph-root){flex-wrap:wrap}
 .dph-runtime{position:absolute;inset:0;pointer-events:none;transform:scaleX(var(--dph-mirror,1))}
 .dph-runtime canvas,.dph-layer,.dph-image{position:absolute;width:100%;height:100%;inset:0;object-fit:contain;pointer-events:none}
 .dph-runtime canvas{display:block}
+.dph-mver-viewport{position:absolute;overflow:hidden}
+.dph-mver-viewport .dph-layer{object-fit:fill}
 .dph-empty{display:flex;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1px dashed #73878a66;border-radius:12px;padding:12px;box-sizing:border-box;text-align:center}
 .dph-root button,.dph-panel button{font:inherit;color:inherit;cursor:pointer;border:1px solid #7a929844;background:transparent;border-radius:6px;padding:5px 9px}
 .dph-root button:hover,.dph-panel button:hover{background:#81989c22}

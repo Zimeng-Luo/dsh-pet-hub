@@ -1,10 +1,14 @@
-# DSH Pet Hub 0.1.0
+# DSH Pet Hub 0.1.1
 
 面向 Windows 用户的 DSH 侧栏桌宠插件，目标宿主 **0.2.1-rc.3**。安装启用后，DSH 界面打开时自动恢复上次选择的桌宠，在侧栏底部常驻。
 
 源码仓库：https://github.com/Zimeng-Luo/dsh-pet-hub
 
-**直接下载预编译安装包：** [dsh-pet-hub-0.1.0.tgz](https://github.com/Zimeng-Luo/dsh-pet-hub/raw/refs/heads/main/downloads/dsh-pet-hub-0.1.0.tgz)。无需安装 Node 或自行构建，按下方桌面端说明安装。
+**直接下载预编译安装包：** [dsh-pet-hub-0.1.1.tgz](https://github.com/Zimeng-Luo/dsh-pet-hub/raw/refs/heads/main/downloads/dsh-pet-hub-0.1.1.tgz)。无需安装 Node 或自行构建，按下方桌面端说明安装。
+
+## 使用仓库中的芙宁娜模型
+
+请先升级到 **0.1.1**，再按 [芙宁娜模型配置](docs/芙宁娜模型配置.md) 导入 `example/芙宁娜猫猫版/芙宁娜猫猫版` 整个文件夹。该包的键鼠、键盘模式已用真实文件验证；无需手工转换编号图片或移动表情文件。
 
 ## 这一版做到了什么
 
@@ -12,20 +16,21 @@
 - 注册到 `sidebar.footer.action`，默认排序 -1000，放在通常的余额 footer 条目之前；侧栏折叠时收起画布、保留管理入口。渲染区域占据布局空间，不依赖屏幕绝对坐标。
 - 复用 BongoCat 旧版的 **easy-live2d 0.4.4 + Pixi.js 8.18.1** 运行链路，适配原模型加载、动作、表情、鼠标跟随、左右手和按键图片组合。
 - ZIP / 文件夹导入，自动发现 model3 入口，多入口手动选择；保存资源、当前选择、高度、镜像和显隐。
+- Mver 整包识别：读取 `config.json`，区分键鼠／键盘／手柄模型，按原按键组合显示编号图片，并保留跨模式表情引用；再次触发相同表情可恢复。
 - 先准备新运行实例再替换旧实例；加载失败保留当前桌宠。刷新／重新打开界面后自动加载。
 - 独立的 PNG、JPEG、GIF、WebP 图片适配器，用于接入已有图片挂件。
 - 独立通知气泡和版本化扩展事件；可选读取现有小鲸鱼插件的余额与等待提示。
 
-这是一版可以安装的运行适配插件。它移植 BongoCat 的 Web 运行链路到侧栏，**不会启动或嵌入你本机安装的 BongoCat.exe，也不是完整 BongoCat 原应用的所有功能迁移**。Mver 整套配置、Cubism 2、其他 EXE、Spine 等需要另外的适配器。
+这是一版可以安装的运行适配插件。它移植 BongoCat 的 Web 运行链路到侧栏，**不会启动或嵌入你本机安装的 BongoCat.exe，也不是完整 BongoCat 原应用的所有功能迁移**。Mver 的资源、按键图片与表情配置已支持；系统全局输入、原生窗口参数、音频与网络控制尚未迁移。Cubism 2、其他 EXE、Spine 等仍需要另外的适配器。
 
 ## Windows 安装
 
 ### 官方 DSH 桌面客户端
 
-1. 下载 `dsh-pet-hub-0.1.0.tgz` 到本机。
+1. 下载 `dsh-pet-hub-0.1.1.tgz` 到本机。
 2. 在 DSH 的「插件 → 添加插件」中填写该文件的**完整本地路径**，例如：
    ```text
-   C:/Users/你的用户名/Downloads/dsh-pet-hub-0.1.0.tgz
+   C:/Users/你的用户名/Downloads/dsh-pet-hub-0.1.1.tgz
    ```
 3. 安装并启用，完全退出并重新打开 DSH。
 4. 侧栏底部出现桌宠区域，点击「管理」。
@@ -37,7 +42,7 @@
 在 PowerShell 中：
 
 ```powershell
-dsh plugin --profile web add "C:/Users/你的用户名/Downloads/dsh-pet-hub-0.1.0.tgz"
+dsh plugin --profile web add "C:/Users/你的用户名/Downloads/dsh-pet-hub-0.1.1.tgz"
 dsh web
 ```
 
@@ -46,7 +51,7 @@ dsh web
 ## 首次配置
 
 1. 如果使用 Live2D，在「管理 → Live2D 运行支持」中选择官方 Cubism SDK for Web 的 `Core/live2dcubismcore.js` 或 `.min.js`。官方 SDK：https://www.live2d.com/en/sdk/download/web/ 。这是可执行脚本，只选择可信官方文件；Core 不随本插件分发，仅需首次配置。当前客户端若已经有 Core，则复用。
-2. 选择你的 BongoCat ZIP，或先解压再选择整个资源文件夹。资源包本身不应需要执行 exe 或安装脚本。
+2. 选择你的 BongoCat ZIP，或先解压再选择整个资源文件夹。Mver 包应选择同时包含 `config.json` 和 `img` 的那一层，保留三个模式目录；包中的 exe、dll 不会被执行。
 3. 多模型包在列表中选择入口，点击「使用」。动作和表情从模型声明中列出。
 4. 调整高度、镜像。关闭管理面板；以后打开 DSH 会自动恢复。
 
@@ -75,6 +80,13 @@ BongoCat 的附加层按模型入口所在目录查找：
 模型动作音效默认关闭，尚未提供音效配置。模型没有声明的待机、呼吸或特殊交互，不宣称自动补齐。当前版仅复用上述明确列出的链路。
 
 ZIP 限制：256 MiB 压缩文件、512 MiB 解压总量、128 MiB 单文件、6000 项。不支持 ZIP64、分卷、加密、非 UTF-8 中文文件名和符号链接；遇到这些格式先解压后导入文件夹。文件夹导入仍有单文件与总量限制。
+
+Mver 整包额外识别 `img/<mode>/cat_model/*.model3.json` 和根 `config.json`：
+
+- `standard.hand`、`keyboard.lefthand/righthand`、对应的 keyboard 与 face 表，映射原编号图片与 Windows 虚拟键组合。
+- `l2d_expression` 的首项用于清除表情，后续项目依序对应模型表情；重复组合键切回默认表情。
+- 原始窗口宽高作为叠加图坐标比例；原生投影缩放、窗口置顶、网络、全局快捷键和手柄输入不在此适配范围。
+- 0.1.0 已导入的资源库在升级后自动重建模式索引，保留包 ID 与当前选择。
 
 ## 数据与备份
 
@@ -136,14 +148,16 @@ src/importer.js / catalog.js   ZIP 和模型引用校验
 src/whale.js                   可选小鲸鱼只读桥接
 ```
 
+本地复测仓库 Mver 示例可设置 `MVER_EXAMPLE_DIR` 指向包含 config.json 与 img 的文件夹，再运行 `npm run test:browser`。Core 测试文件仍需自己提供，不随安装包分发。
+
 新增桌宠类型需实现 `{id,mount}` 适配器并在 `PetPanel.jsx` 中注册；mount 返回 `dispose` 和可选 `event/visible/motions/expressions` 等能力。资源识别增加到 catalog；资源 ZIP 不自动执行任何适配器代码。多种桌宠共享通知层。
 
 ## 已知边界
 
 - 已测试 Linux Chromium 中的 DSH 0.2.1-rc.3 Web 运行环境；没有连接用户的 Windows 机器。Windows Electron 壳、原生对话框及其他主题插件仍需本机验收。
 - 默认插槽位于设置入口上方。截图中自定义余额卡片的来源未知；如果该卡片不在同一 footer 列表，精确相对位置需要针对该插件再适配。插件不使用 Windows 窗口置顶或屏幕坐标覆盖。
-- 上传的「少女猫猫版.zip」超过会话文件工具的传输上限，未用它完成验证；已用上游真实 BongoCat 标准 Live2D 模型验证。
-- 尚不支持任意桌宠 EXE、Mver 整套程序、Cubism 2、系统全局键鼠、手柄、音效管理，也未完成完整小鲸鱼功能迁移。
+- 已验证仓库 `example/芙宁娜猫猫版/芙宁娜猫猫版` 的整包导入、键鼠／键盘模式切换、编号按键图片、跨目录表情及刷新恢复。先前上传的「少女猫猫版.zip」与该模型名称不同，未单独验证。
+- 尚不支持任意桌宠 EXE 的执行、Cubism 2、系统全局键鼠、手柄输入、音效管理，也未完成完整小鲸鱼功能迁移。
 - 首版针对指定 DSH 版本声明兼容；升级宿主前需检查插件 API 变化。
 
 ## 卸载

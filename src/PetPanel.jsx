@@ -8,6 +8,7 @@ import { imageAdapter } from './adapters/image.js';
 import { bongoAdapter } from './adapters/bongocat.js';
 import { ensureCore } from './adapters/core.js';
 import { startWhaleBridge } from './whale.js';
+import { inspectPack } from './catalog.js';
 
 const defaults = { height: 240, mirror: false, visible: true, whale: false, pack: null, entry: null };
 
@@ -48,7 +49,15 @@ export function PetPanel({ wide = true }) {
     window.addEventListener('dsh-pet:notify', onNotify);
     void (async () => {
       try {
-        const [library, saved, core] = await Promise.all([storage.list(), storage.settings(), storage.core()]);
+        const [stored, saved, core] = await Promise.all([storage.list(), storage.settings(), storage.core()]);
+        const library = [];
+        for (const pack of stored) {
+          if (pack.catalogVersion >= 2) { library.push(pack); continue; }
+          try {
+            const updated = { ...await inspectPack(pack.files, pack.name), id: pack.id, createdAt: pack.createdAt };
+            await storage.put(updated); library.push(updated);
+          } catch (error) { library.push(pack); if (alive.current) setError(`资源索引更新失败：${error.message}`); }
+        }
         if (!alive.current) return;
         const next = { ...defaults, ...saved, height: Math.max(120, Math.min(420, Number(saved.height) || 240)) };
         configRef.current = next; setConfig(next); setPacks(library); setCoreReady(!!core || !!globalThis.Live2DCubismCore);
@@ -154,7 +163,7 @@ export function PetPanel({ wide = true }) {
         <h3>导入资源</h3>
         <label>ZIP <input aria-label="导入 ZIP" type="file" accept=".zip" disabled={busy} onChange={onInput(files => importFiles(files, false))} /></label>
         <label>文件夹 <input aria-label="导入文件夹" type="file" webkitdirectory="" multiple disabled={busy} onChange={onInput(files => importFiles(files, true))} /></label>
-        <p className="dph-help">支持 BongoCat 的 model3 资源及其按键图片；ZIP 上限 256 MiB。PNG / GIF / WebP 可作为图片桌宠导入。其他运行时通过适配器扩展。</p>
+        <p className="dph-help">支持 BongoCat model3 资源和 Mver 整包（config.json + img）。请导入整个文件夹，保留跨模式表情引用；ZIP 上限 256 MiB。PNG / GIF / WebP 也可作为图片桌宠导入。</p>
         <h3>Live2D 运行支持 {coreReady ? '· 已配置' : '· 首次需配置'}</h3>
         <p className="dph-help">从 <a href="https://www.live2d.com/en/sdk/download/web/" target="_blank" rel="noreferrer">官方 Cubism SDK for Web</a> 的 Core 目录选择脚本。只选择可信的官方文件；它会在客户端执行。Core 不随本插件分发。</p>
         <input aria-label="导入 Cubism Core" type="file" accept=".js" disabled={busy || coreReady} onChange={onInput(files => importCore(files[0]))} />
@@ -167,6 +176,8 @@ export function PetPanel({ wide = true }) {
         <h3>动作与表情</h3>
         <div className="dph-actions">{active?.instance.motions.map((motion, i) => <button key={i} onClick={() => Promise.resolve(active.instance.motion(motion)).catch(e => setError(e.message))}>{motion.name || `${motion.group} ${motion.no + 1}`}</button>)}</div>
         <div className="dph-actions">{active?.instance.expressions.map((expression, i) => <button key={i} onClick={() => { try { active.instance.expression(i); } catch (e) { setError(e.message); } }}>{expression.name || `表情 ${i + 1}`}</button>)}</div>
+        {active?.instance.resetExpression && <button onClick={() => active.instance.resetExpression()}>恢复默认表情</button>}
+        {active?.entry.mver && <p className="dph-help">已读取 Mver 配置中的按键与表情组合键。相同表情再次触发可恢复；手柄模型当前仅显示，不采集手柄输入。</p>}
         {!active?.instance.motions.length && !active?.instance.expressions.length && <p className="dph-help">当前资源没有声明动作或表情。</p>}
         <h3>功能扩展</h3>
         <label><input type="checkbox" checked={config.whale} onChange={e => updateConfig({ whale: e.target.checked })} />接收小鲸鱼余额与等待提示（需已安装对应插件）</label>
@@ -182,7 +193,7 @@ function PackRow({ pack, active, busy, onSelect, onRemove, onExport }) {
   const [path, setPath] = useState(pack.entries[0].path);
   const entry = pack.entries.find(e => e.path === path);
   return <div className="dph-row"><strong>{pack.name} {active?.pack.id === pack.id && <span className="dph-badge">当前</span>}</strong>
-    <div className="dph-actions"><select aria-label={`${pack.name} 模型入口`} value={path} onChange={e => setPath(e.target.value)}>{pack.entries.map(e => <option key={e.path} value={e.path}>{e.label} · {e.adapter === 'image' ? '图片' : 'BongoCat / Live2D'}</option>)}</select>
+    <div className="dph-actions"><select aria-label={`${pack.name} 模型入口`} value={path} onChange={e => setPath(e.target.value)}>{pack.entries.map(e => <option key={e.path} value={e.path}>{e.label} · {e.adapter === 'image' ? '图片' : e.mver ? 'Mver' : 'BongoCat / Live2D'}</option>)}</select>
       <button disabled={busy} onClick={() => onSelect(entry)}>使用</button><button disabled={busy} onClick={onExport}>导出</button><button disabled={busy} onClick={onRemove}>删除</button></div>
   </div>;
 }

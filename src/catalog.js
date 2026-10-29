@@ -1,4 +1,5 @@
 import JSON5 from 'json5';
+import { detectMver, orderMverEntries } from './adapters/mver.js';
 
 export const LIMITS = Object.freeze({ archive: 256 * 1024 ** 2, expanded: 512 * 1024 ** 2, file: 128 * 1024 ** 2, entries: 6000 });
 export function safePath(raw) {
@@ -52,14 +53,15 @@ export async function inspectPack(files, name = '未命名资源') {
     const model = parseModel(await file.blob.text());
     const missing = references(model).map(r => resolveReference(file.path, r)).filter(p => !byPath.has(p));
     if (missing.length) throw new Error(`模型 ${file.path} 缺少文件：${missing.slice(0, 5).join('、')}`);
-    entries.push({ path: file.path, label: file.path.split('/').at(-1).replace(/\.model3\.json$/i, ''), adapter: 'bongocat-live2d' });
+    const mver = await detectMver(byPath, file.path);
+    entries.push({ path: file.path, label: mver?.label || file.path.split('/').at(-1).replace(/\.model3\.json$/i, ''), adapter: 'bongocat-live2d', ...(mver ? { mver } : {}) });
   }
   // Explicit fallback: never guess a model texture is the pet itself.
   if (!entries.length) for (const file of normalized.filter(f => /\.(png|webp|gif|jpe?g)$/i.test(f.path))) {
     entries.push({ path: file.path, label: file.path.split('/').at(-1), adapter: 'image' });
   }
-  if (!entries.length) throw new Error('未找到 .model3.json 或图片。Mver 整套配置、Cubism 2、可执行程序尚不支持。');
-  return { id: crypto.randomUUID(), name, files: normalized, entries, createdAt: Date.now() };
+  if (!entries.length) throw new Error('未找到 .model3.json 或图片。请导入包含模型资源的文件夹，而不是单独的可执行程序。');
+  return { id: crypto.randomUUID(), name, files: normalized, entries: orderMverEntries(entries), createdAt: Date.now(), catalogVersion: 2 };
 }
 export function mime(path) {
   const ext = path.split('.').at(-1).toLowerCase();
