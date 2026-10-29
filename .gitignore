@@ -1,0 +1,8 @@
+node_modules/
+work/
+test-results/
+playwright-report/
+preview/bundle.js
+*.log
+.env
+.env.*
