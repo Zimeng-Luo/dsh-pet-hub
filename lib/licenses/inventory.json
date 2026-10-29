@@ -1,0 +1,86 @@
+[
+  {
+    "name": "@pixi/colord",
+    "version": "2.9.6",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/@pixi/colord/-/colord-2.9.6.tgz",
+    "licenseFile": "@pixi__colord.txt"
+  },
+  {
+    "name": "@pixi/sound",
+    "version": "6.0.1",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/@pixi/sound/-/sound-6.0.1.tgz",
+    "licenseFile": "@pixi__sound.txt"
+  },
+  {
+    "name": "@xmldom/xmldom",
+    "version": "0.8.15",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.15.tgz",
+    "licenseFile": "@xmldom__xmldom.txt"
+  },
+  {
+    "name": "earcut",
+    "version": "3.2.4",
+    "license": "ISC",
+    "source": "https://registry.npmjs.org/earcut/-/earcut-3.2.4.tgz",
+    "licenseFile": "earcut.txt"
+  },
+  {
+    "name": "easy-live2d",
+    "version": "0.4.4",
+    "license": "MPL-2.0",
+    "source": "https://registry.npmjs.org/easy-live2d/-/easy-live2d-0.4.4.tgz",
+    "licenseFile": "easy-live2d.txt"
+  },
+  {
+    "name": "eventemitter3",
+    "version": "5.0.4",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/eventemitter3/-/eventemitter3-5.0.4.tgz",
+    "licenseFile": "eventemitter3.txt"
+  },
+  {
+    "name": "fflate",
+    "version": "0.8.2",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/fflate/-/fflate-0.8.2.tgz",
+    "licenseFile": "fflate.txt"
+  },
+  {
+    "name": "ismobilejs",
+    "version": "1.1.1",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/ismobilejs/-/ismobilejs-1.1.1.tgz",
+    "licenseFile": "ismobilejs.txt"
+  },
+  {
+    "name": "json5",
+    "version": "2.2.3",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz",
+    "licenseFile": "json5.txt"
+  },
+  {
+    "name": "parse-svg-path",
+    "version": "0.1.2",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/parse-svg-path/-/parse-svg-path-0.1.2.tgz",
+    "licenseFile": "parse-svg-path.txt"
+  },
+  {
+    "name": "pixi.js",
+    "version": "8.18.1",
+    "license": "MIT",
+    "source": "https://registry.npmjs.org/pixi.js/-/pixi.js-8.18.1.tgz",
+    "licenseFile": "pixi.js.txt"
+  },
+  {
+    "name": "tiny-lru",
+    "version": "11.4.7",
+    "license": "BSD-3-Clause",
+    "source": "https://registry.npmjs.org/tiny-lru/-/tiny-lru-11.4.7.tgz",
+    "licenseFile": "tiny-lru.txt"
+  }
+]
