@@ -1,6 +1,6 @@
 {
   "name": "dsh-pet-hub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DSH sidebar pet host with BongoCat-compatible runtime",
   "type": "module",
   "license": "MIT",
@@ -29,7 +29,8 @@
       "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-sidebar"
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-settings-general"
       ]
     }
   },

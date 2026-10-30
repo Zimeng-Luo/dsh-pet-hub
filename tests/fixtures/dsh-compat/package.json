@@ -1,0 +1,6 @@
+{
+  "name": "dsh-pet-hub-compat-fixture",
+  "type": "module",
+  "exports": { ".": "./index.js", "./client": "./lib/client.js" },
+  "dsh": { "client": { "platform": "web", "inject": ["@deepseek-ai/dsh-client-ui-renderer", "@deepseek-ai/dsh-client-ui-sidebar"] } }
+}

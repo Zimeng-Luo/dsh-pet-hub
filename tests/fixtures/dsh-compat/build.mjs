@@ -1,0 +1,2 @@
+import { build } from 'esbuild';
+await build({entryPoints:[new URL('./client.jsx',import.meta.url).pathname],outfile:new URL('./lib/client.js',import.meta.url).pathname,bundle:true,format:'cjs',platform:'browser',jsx:'automatic',external:['react','react/jsx-runtime'],banner:{js:'window.__ModuleLoader__.load({id:"dsh-pet-hub-compat-fixture",factory:(require)=>{var module={exports:{}};var exports=module.exports;'},footer:{js:'return module.exports;}});'}});
